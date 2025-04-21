@@ -23,7 +23,6 @@ public class CustomerPageController implements Initializable {
     public TextField txtPhone;
 
     private final CustomerModel customerModel = new CustomerModel();
-    public Label lblCustomer;
 
     // table model
 

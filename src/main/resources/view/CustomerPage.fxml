@@ -27,7 +27,7 @@
                               <Font name="System Bold" size="12.0" />
                            </font>
                         </Label>
-                        <Label fx:id="lblCustomer" text="1">
+                        <Label fx:id="lblCustomerid" text="1">
                            <HBox.margin>
                               <Insets left="20.0" top="30.0" />
                            </HBox.margin>
