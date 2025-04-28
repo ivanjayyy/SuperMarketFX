@@ -6,6 +6,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import lk.ijse.supermarketfx.dto.CustomerDTO;
 import lk.ijse.supermarketfx.dto.tm.CustomerTM;
 import lk.ijse.supermarketfx.model.CustomerModel;
@@ -13,6 +14,7 @@ import lk.ijse.supermarketfx.model.CustomerModel;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class CustomerPageController implements Initializable {
@@ -33,6 +35,12 @@ public class CustomerPageController implements Initializable {
     public TableColumn<CustomerTM,String> colEmail;
     public TableColumn<CustomerTM,String> colPhone;
 
+    public Button btnGenerateReport;
+    public Button btnReset;
+    public Button btnDelete;
+    public Button btnUpdate;
+    public Button btnSave;
+
     public void btnSaveOnAction(ActionEvent actionEvent) {
         String customerid = lblCustomerid.getText();
         String name = txtName.getText();
@@ -50,6 +58,7 @@ public class CustomerPageController implements Initializable {
             boolean isSaved = customerModel.saveCustomer(customerDTO);
 
             if(isSaved) {
+                resetPage();
                 new Alert(Alert.AlertType.INFORMATION, "Customer Saved Successfully.").show();
             } else {
                 new Alert(Alert.AlertType.ERROR, "Customer Saving Failed.").show();
@@ -69,8 +78,9 @@ public class CustomerPageController implements Initializable {
         colPhone.setCellValueFactory(new PropertyValueFactory<>("phone"));
 
         try {
-            loadTableData();
-            loadNextId();
+//            loadTableData();
+//            loadNextId();
+            resetPage();
         } catch (Exception e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Customer Loading Failed.").show();
@@ -99,5 +109,101 @@ public class CustomerPageController implements Initializable {
     public void loadNextId() throws SQLException {
         String nextId = customerModel.getNextCustomerId();
         lblCustomerid.setText(nextId);
+    }
+
+    private void resetPage() {
+        try {
+            loadTableData();
+            loadNextId();
+
+            // save button id -> enable
+            btnSave.setDisable(false);
+
+            // update, delete button (id) -> disable
+            btnDelete.setDisable(true);
+            btnUpdate.setDisable(true);
+
+            txtEmail.setText("");
+            txtPhone.setText("");
+            txtNic.setText("");
+            txtName.setText("");
+
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Customer Loading Failed.").show();
+            e.printStackTrace();
+        }
+    }
+
+    public void onClickTable(MouseEvent mouseEvent) {
+        CustomerTM selectedItem = tblCustomer.getSelectionModel().getSelectedItem();
+
+        if (selectedItem != null) {
+            lblCustomerid.setText(selectedItem.getCustomerId());
+            txtName.setText(selectedItem.getName());
+            txtNic.setText(selectedItem.getNic());
+            txtEmail.setText(selectedItem.getEmail());
+            txtPhone.setText(selectedItem.getPhone());
+
+            // save button disable
+            btnSave.setDisable(true);
+
+            // update, delete button enable
+            btnDelete.setDisable(false);
+            btnUpdate.setDisable(false);
+
+        }
+    }
+
+    public void btnDeleteOnAction(ActionEvent actionEvent) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this customer?", ButtonType.YES, ButtonType.NO);
+        Optional<ButtonType> optionalButtonType = alert.showAndWait();
+
+        if(optionalButtonType.isPresent() && optionalButtonType.get() == ButtonType.YES) {
+            String customerId = lblCustomerid.getText();
+
+            try {
+                boolean isDeleted = customerModel.deleteCustomer(customerId);
+
+                if(isDeleted) {
+                    new Alert(Alert.AlertType.INFORMATION, "Customer Deleted Successfully").show();
+                    resetPage();
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Customer Deleting Failed.").show();
+                }
+            } catch (SQLException e) {
+                new Alert(Alert.AlertType.ERROR, "Customer Deleting Failed.").show();
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void btnUpdateOnAction(ActionEvent actionEvent) {
+        String customerid = lblCustomerid.getText();
+        String name = txtName.getText();
+        String nic = txtNic.getText();
+        String email = txtEmail.getText();
+        String phone = txtPhone.getText();
+
+        CustomerDTO customerDTO = new CustomerDTO(
+                customerid,name,nic,email,phone
+        );
+
+        try {
+            boolean isUpdated = customerModel.updateCustomer(customerDTO);
+
+            if(isUpdated) {
+                new Alert(Alert.AlertType.INFORMATION, "Customer Update Successfully.").show();
+                resetPage();
+            } else {
+                new Alert(Alert.AlertType.ERROR, "Customer Update Failed.").show();
+            }
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Customer Update Failed.").show();
+            e.printStackTrace();
+        }
+    }
+
+    public void btnResetOnAction(ActionEvent actionEvent) {
+        resetPage();
     }
 }
