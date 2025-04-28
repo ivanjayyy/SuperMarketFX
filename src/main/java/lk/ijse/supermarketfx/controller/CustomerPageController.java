@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 public class CustomerPageController implements Initializable {
     public Label lblCustomerid;
@@ -41,6 +42,11 @@ public class CustomerPageController implements Initializable {
     public Button btnUpdate;
     public Button btnSave;
 
+    private final String namePattern = "^[a-zA-Z ]$";
+    private final String nicPattern = "^[0-9]{9}[vVXx]||[0-9]{12}$";
+    private final String emailPattern = "^[\\\\w!#$%&'*+/=?`{|}~^-]+(?:\\\\.[\\\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\\\.)+[a-zA-Z]{2,6}$";
+    private final String phonePattern = "^(\\\\d+)||((\\\\d+\\\\.)(\\\\d){2})$";
+
     public void btnSaveOnAction(ActionEvent actionEvent) {
         String customerid = lblCustomerid.getText();
         String name = txtName.getText();
@@ -48,24 +54,61 @@ public class CustomerPageController implements Initializable {
         String email = txtEmail.getText();
         String phone = txtPhone.getText();
 
+        // [A-Aa-z ]+
+        // 1. Using Pattern object java.util.regex
+//        Pattern namePattern = Pattern.compile("^[A-Za-z ]+$");
+//        boolean isValidName = namePattern.matcher(name).matches();
+//        System.out.println(name + " is valid: " + isValidName);
+
+        // 2. Using String class matches() method
+//        boolean isValidNameUsingStringMethod = name.matches("^[A-Za-z ]+$");
+//        System.out.println(name + " is valid: " + isValidNameUsingStringMethod);
+
+        boolean isValidName = name.matches(namePattern);
+        boolean isValidNic = nic.matches(nicPattern);
+        boolean isValidEmail = email.matches(emailPattern);
+        boolean isValidPhone = phone.matches(phonePattern);
+
+        txtName.setStyle(txtName.getStyle() + ";-fx-text-fill: black;");
+        if(!isValidName) {
+            txtName.setStyle(txtName.getStyle() + ";-fx-text-fill: red;");
+        }
+
+        txtNic.setStyle(txtNic.getStyle() + ";-fx-text-fill: black;");
+        if(!isValidNic) {
+            txtNic.setStyle(txtNic.getStyle() + ";-fx-text-fill: red;");
+        }
+
+        txtEmail.setStyle(txtEmail.getStyle() + ";-fx-text-fill: black;");
+        if(!isValidEmail) {
+            txtEmail.setStyle(txtEmail.getStyle() + ";-fx-text-fill: red;");
+        }
+
+        txtPhone.setStyle(txtPhone.getStyle() + ";-fx-text-fill: black;");
+        if(!isValidPhone) {
+            txtPhone.setStyle(txtPhone.getStyle() + ";-fx-text-fill: red;");
+        }
+
         // Data Transfer Object - dto
 
         CustomerDTO customerDTO = new CustomerDTO(
                 customerid,name,nic,email,phone
         );
 
-        try {
-            boolean isSaved = customerModel.saveCustomer(customerDTO);
+        if(isValidName && isValidNic && isValidEmail && isValidPhone) {
+            try {
+                boolean isSaved = customerModel.saveCustomer(customerDTO);
 
-            if(isSaved) {
-                resetPage();
-                new Alert(Alert.AlertType.INFORMATION, "Customer Saved Successfully.").show();
-            } else {
+                if (isSaved) {
+                    resetPage();
+                    new Alert(Alert.AlertType.INFORMATION, "Customer Saved Successfully.").show();
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Customer Saving Failed.").show();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
                 new Alert(Alert.AlertType.ERROR, "Customer Saving Failed.").show();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "Customer Saving Failed.").show();
         }
     }
 
